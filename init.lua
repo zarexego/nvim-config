@@ -1,12 +1,11 @@
--- ============================================================
--- Neovim config
--- ============================================================
 
--- 1. ЛИДЕР-КЛАВИША (строго до всего!)
+-- Neovim config
+
+-- 1. 
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- 2. БАЗОВЫЕ НАСТРОЙКИ
+-- 2. 
 local opt = vim.opt
 
 -- Интерфейс
@@ -62,7 +61,7 @@ opt.rtp:prepend(lazypath)
 -- 4. ПЛАГИНЫ
 vim.g.lazy_git_timeout = 120
 require("lazy").setup({
-  -- ====== ВНЕШНИЙ ВИД ======
+  -- ВНЕШНИЙ ВИД 
   { "nvim-tree/nvim-web-devicons", lazy = true },
   {
     "folke/tokyonight.nvim",
@@ -103,7 +102,7 @@ require("lazy").setup({
     config = function() require("which-key").setup() end,
   },
 
-  -- ====== ФАЙЛЫ И ПОИСК ======
+  -- ФАЙЛЫ И ПОИСК
   {
     "nvim-tree/nvim-tree.lua",
     dependencies = { "nvim-tree/nvim-web-devicons" },
@@ -125,13 +124,12 @@ require("lazy").setup({
     config = function() require("telescope").setup({}) end,
   },
 
-  -- ====== СИНТАКСИС ======
+  -- СИНТАКСИС
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "master",
     build = ":TSUpdate",
     config = function()
-      -- ВАЖНО: configs, а не просто require("nvim-treesitter")
       require("nvim-treesitter.configs").setup({
         ensure_installed = {
           "lua", "vim", "vimdoc", "query",
@@ -146,7 +144,7 @@ require("lazy").setup({
     end,
   },
 
-  -- ====== LSP ======
+  -- LSP
   {
     "williamboman/mason.nvim",
     dependencies = {
@@ -161,7 +159,7 @@ require("lazy").setup({
       })
 
       
-      -- Настройка rust-analyzer (новый API Neovim 0.11+)
+      -- Настройка rust-analyzer
       vim.lsp.config('rust_analyzer', {
         settings = {
           ["rust-analyzer"] = {
@@ -189,7 +187,7 @@ require("lazy").setup({
     end,
   },
 
-  -- ====== АВТОДОПОЛНЕНИЕ ======
+  -- АВТОДОПОЛНЕНИЕ
   {
     "hrsh7th/nvim-cmp",
     dependencies = {
@@ -204,7 +202,6 @@ require("lazy").setup({
       local cmp = require("cmp")
       local luasnip = require("luasnip")
 
-      -- Загружаем готовые сниппеты
       require("luasnip.loaders.from_vscode").lazy_load()
 
       cmp.setup({
@@ -237,8 +234,8 @@ require("lazy").setup({
       })
     end,
   },
-
-  -- ====== РЕДАКТИРОВАНИЕ ======
+    
+  --РЕДАКТИРОВАНИЕ
   {
     "windwp/nvim-autopairs",
     event = "InsertEnter",
@@ -266,7 +263,7 @@ require("lazy").setup({
     end,
   },
 
-  -- ====== GIT ======
+  -- GIT 
   {
     "lewis6991/gitsigns.nvim",
     config = function()
@@ -292,7 +289,7 @@ require("lazy").setup({
     keys = { { "<leader>gg", "<cmd>LazyGit<cr>", desc = "Lazygit" } },
   },
 
-  -- ====== ФОРМАТИРОВАНИЕ И ЛИНТИНГ ======
+  -- ФОРМАТИРОВАНИЕ И ЛИНТИНГ
   {
     "stevearc/conform.nvim",
     event = { "BufWritePre" },
@@ -325,9 +322,8 @@ require("lazy").setup({
   },
 })
 
--- ============================================================
+
 -- 5. ГЛОБАЛЬНЫЕ НАСТРОЙКИ (вне lazy.setup)
--- ============================================================
 
 -- Диагностика
 vim.diagnostic.config({
@@ -367,7 +363,6 @@ vim.api.nvim_create_autocmd("FileType", {
     end
     local launcher_jar = launcher_jars[#launcher_jars]
 
-    -- Безопасное определение root_dir (не падает, если ничего не найдено)
     local root_files = vim.fs.find({ "pom.xml", "build.gradle", "build.gradle.kts", ".git", "src" }, { upward = true })
     local root_dir = root_files[1] and vim.fs.dirname(root_files[1]) or vim.fn.getcwd()
 
