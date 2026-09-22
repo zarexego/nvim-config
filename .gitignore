@@ -1,0 +1,11 @@
+# Neovim
+*.swp
+*.swo
+.netrwhist
+tags
+.DS_Store
+
+# Local overrides
+lua/private.lua
+.env
+*.key
