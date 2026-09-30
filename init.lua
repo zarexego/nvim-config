@@ -1,14 +1,14 @@
-
+-- ============================================================
 -- Neovim config
+-- ============================================================
 
--- 1. 
+-- ====== Leader ======
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- 2. 
+-- ====== Options ======
 local opt = vim.opt
 
--- Интерфейс
 opt.number = true
 opt.relativenumber = true
 opt.cursorline = true
@@ -18,7 +18,6 @@ opt.termguicolors = true
 opt.showmode = false
 opt.laststatus = 3
 
--- Поведение
 opt.mouse = "a"
 opt.clipboard = "unnamedplus"
 opt.splitright = true
@@ -28,20 +27,18 @@ opt.timeoutlen = 300
 opt.undofile = true
 opt.swapfile = false
 
--- Табы
 opt.expandtab = true
 opt.shiftwidth = 4
 opt.tabstop = 4
 opt.softtabstop = 4
 opt.smartindent = true
 
--- Поиск
 opt.ignorecase = true
 opt.smartcase = true
 opt.hlsearch = false
 opt.incsearch = true
 
--- 3. БУТСТРАП lazy.nvim
+-- ====== lazy.nvim bootstrap ======
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -58,10 +55,11 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 opt.rtp:prepend(lazypath)
 
--- 4. ПЛАГИНЫ
+-- ====== Plugins ======
 vim.g.lazy_git_timeout = 120
 require("lazy").setup({
-  -- ВНЕШНИЙ ВИД 
+
+  -- ====== UI ======
   { "nvim-tree/nvim-web-devicons", lazy = true },
   {
     "folke/tokyonight.nvim",
@@ -84,9 +82,9 @@ require("lazy").setup({
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       require("bufferline").setup()
-      vim.keymap.set("n", "<S-h>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Предыдущий буфер" })
-      vim.keymap.set("n", "<S-l>", "<cmd>BufferLineCycleNext<cr>", { desc = "Следующий буфер" })
-      vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Закрыть буфер" })
+      vim.keymap.set("n", "<S-h>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Prev buffer" })
+      vim.keymap.set("n", "<S-l>", "<cmd>BufferLineCycleNext<cr>", { desc = "Next buffer" })
+      vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Close buffer" })
     end,
   },
   {
@@ -102,13 +100,13 @@ require("lazy").setup({
     config = function() require("which-key").setup() end,
   },
 
-  -- ФАЙЛЫ И ПОИСК
+  -- ====== Files & search ======
   {
     "nvim-tree/nvim-tree.lua",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       require("nvim-tree").setup()
-      vim.keymap.set("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "Проводник" })
+      vim.keymap.set("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "Explorer" })
     end,
   },
   {
@@ -116,15 +114,15 @@ require("lazy").setup({
     dependencies = { "nvim-lua/plenary.nvim" },
     cmd = "Telescope",
     keys = {
-      { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Поиск файлов" },
-      { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Поиск по тексту" },
-      { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Буферы" },
-      { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Справка" },
+      { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
+      { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live grep" },
+      { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
+      { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help" },
     },
     config = function() require("telescope").setup({}) end,
   },
 
-  -- СИНТАКСИС
+  -- ====== Syntax ======
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "master",
@@ -144,7 +142,7 @@ require("lazy").setup({
     end,
   },
 
-  -- LSP
+  -- ====== LSP ======
   {
     "williamboman/mason.nvim",
     dependencies = {
@@ -154,13 +152,21 @@ require("lazy").setup({
     config = function()
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "pyright", "ruff", "rust_analyzer" },
+        ensure_installed = { "pyright", "ruff", "rust_analyzer", "jdtls" },
         automatic_installation = true,
       })
 
-      
-      -- Настройка rust-analyzer
-      vim.lsp.config('rust_analyzer', {
+      -- Extra Java tools
+      local registry = require("mason-registry")
+      for _, tool in ipairs({ "java-debug-adapter", "java-test" }) do
+        local ok, pkg = pcall(registry.get_package, tool)
+        if ok and not pkg:is_installed() then
+          pkg:install()
+        end
+      end
+
+      -- rust-analyzer
+      vim.lsp.config("rust_analyzer", {
         settings = {
           ["rust-analyzer"] = {
             checkOnSave = true,
@@ -169,8 +175,9 @@ require("lazy").setup({
           },
         },
       })
-      vim.lsp.enable('rust_analyzer')
-      -- Кеймапы LSP
+      vim.lsp.enable("rust_analyzer")
+
+      -- LSP keymaps
       vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(args)
           local opts = { buffer = args.buf, desc = "LSP" }
@@ -187,7 +194,64 @@ require("lazy").setup({
     end,
   },
 
-  -- АВТОДОПОЛНЕНИЕ
+  -- ====== Java ======
+  {
+    "mfussenegger/nvim-jdtls",
+    ft = "java",
+  },
+  {
+    "mfussenegger/nvim-dap",
+    dependencies = {
+      "rcarriga/nvim-dap-ui",
+      "theHamsta/nvim-dap-virtual-text",
+      "nvim-neotest/nvim-nio",
+    },
+  },
+  {
+    "rcarriga/nvim-dap-ui",
+    dependencies = { "nvim-neotest/nvim-nio" },
+    config = function()
+      local dap, dapui = require("dap"), require("dapui")
+      dapui.setup()
+      dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open() end
+      dap.listeners.before.event_terminated["dapui_config"] = function() dapui.close() end
+      dap.listeners.before.event_exited["dapui_config"] = function() dapui.close() end
+    end,
+  },
+  {
+    "theHamsta/nvim-dap-virtual-text",
+    config = function() require("nvim-dap-virtual-text").setup({}) end,
+  },
+  {
+    "nvim-neotest/neotest",
+    dependencies = {
+      "nvim-neotest/nvim-nio",
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "rcasia/neotest-java",
+    },
+    config = function()
+      require("neotest").setup({
+        adapters = { require("neotest-java") },
+      })
+    end,
+  },
+  {
+    "rcasia/neotest-java",
+    ft = "java",
+  },
+  {
+    "artur-shaik/jc.nvim",
+    ft = "java",
+    dependencies = { "mfussenegger/nvim-jdtls" },
+    config = function()
+      require("jc").setup({
+        import_order = "intellij",
+      })
+    end,
+  },
+
+  -- ====== Autocomplete ======
   {
     "hrsh7th/nvim-cmp",
     dependencies = {
@@ -234,8 +298,8 @@ require("lazy").setup({
       })
     end,
   },
-    
-  --РЕДАКТИРОВАНИЕ
+
+  -- ====== Editing ======
   {
     "windwp/nvim-autopairs",
     event = "InsertEnter",
@@ -257,13 +321,13 @@ require("lazy").setup({
         close_on_exit = true,
         shell = vim.o.shell,
       })
-      vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Выйти из терминала" })
-      vim.keymap.set("n", "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", { desc = "Терминал снизу" })
-      vim.keymap.set("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", { desc = "Плавающий терминал" })
+      vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal" })
+      vim.keymap.set("n", "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", { desc = "Terminal bottom" })
+      vim.keymap.set("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", { desc = "Terminal float" })
     end,
   },
 
-  -- GIT 
+  -- ====== Git ======
   {
     "lewis6991/gitsigns.nvim",
     config = function()
@@ -276,10 +340,10 @@ require("lazy").setup({
           changedelete = { text = "~" },
         },
       })
-      vim.keymap.set("n", "]c", "<cmd>Gitsigns next_hunk<cr>", { desc = "Следующее изменение" })
-      vim.keymap.set("n", "[c", "<cmd>Gitsigns prev_hunk<cr>", { desc = "Предыдущее изменение" })
-      vim.keymap.set("n", "<leader>gp", "<cmd>Gitsigns preview_hunk<cr>", { desc = "Просмотр изменения" })
-      vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame_line<cr>", { desc = "Git blame" })
+      vim.keymap.set("n", "]c", "<cmd>Gitsigns next_hunk<cr>", { desc = "Next hunk" })
+      vim.keymap.set("n", "[c", "<cmd>Gitsigns prev_hunk<cr>", { desc = "Prev hunk" })
+      vim.keymap.set("n", "<leader>gp", "<cmd>Gitsigns preview_hunk<cr>", { desc = "Preview hunk" })
+      vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame_line<cr>", { desc = "Blame line" })
     end,
   },
   {
@@ -289,7 +353,7 @@ require("lazy").setup({
     keys = { { "<leader>gg", "<cmd>LazyGit<cr>", desc = "Lazygit" } },
   },
 
-  -- ФОРМАТИРОВАНИЕ И ЛИНТИНГ
+  -- ====== Formatting & linting ======
   {
     "stevearc/conform.nvim",
     event = { "BufWritePre" },
@@ -322,10 +386,7 @@ require("lazy").setup({
   },
 })
 
-
--- 5. ГЛОБАЛЬНЫЕ НАСТРОЙКИ (вне lazy.setup)
-
--- Диагностика
+-- ====== Diagnostics ======
 vim.diagnostic.config({
   virtual_text = true,
   signs = true,
@@ -335,67 +396,72 @@ vim.diagnostic.config({
   float = { border = "rounded", source = true },
 })
 
--- Общие кеймапы
+-- ====== Global keymaps ======
 local map = vim.keymap.set
-map("n", "<leader>w", "<cmd>write<cr>", { desc = "Сохранить" })
-map("n", "<leader>q", "<cmd>quit<cr>", { desc = "Выйти" })
-map("n", "<leader>Q", "<cmd>quitall!<cr>", { desc = "Выйти без сохранения" })
-map("n", "<Esc>", "<cmd>nohlsearch<cr>", { desc = "Убрать подсветку" })
-map("n", "<C-h>", "<C-w>h", { desc = "Окно влево" })
-map("n", "<C-j>", "<C-w>j", { desc = "Окно вниз" })
-map("n", "<C-k>", "<C-w>k", { desc = "Окно вверх" })
-map("n", "<C-l>", "<C-w>l", { desc = "Окно вправо" })
+map("n", "<leader>w", "<cmd>write<cr>", { desc = "Save" })
+map("n", "<leader>q", "<cmd>quit<cr>", { desc = "Quit" })
+map("n", "<leader>Q", "<cmd>quitall!<cr>", { desc = "Quit all" })
+map("n", "<Esc>", "<cmd>nohlsearch<cr>", { desc = "Clear search" })
+map("n", "<C-h>", "<C-w>h", { desc = "Window left" })
+map("n", "<C-j>", "<C-w>j", { desc = "Window down" })
+map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
+map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
 
--- Java: запуск jdtls
+-- ====== Java setup ======
+local function java_setup()
+  local jdtls = require("jdtls")
+  local mason_path = vim.fn.stdpath("data") .. "/mason"
+
+  local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+  local workspace_dir = vim.fn.stdpath("cache") .. "/jdtls/workspace/" .. project_name
+  vim.fn.mkdir(workspace_dir, "p")
+
+  local root_files = vim.fs.find(
+    { "pom.xml", "build.gradle", "build.gradle.kts", ".git", "mvnw", "gradlew" },
+    { upward = true }
+  )
+  local root_dir = root_files[1] and vim.fs.dirname(root_files[1]) or vim.fn.getcwd()
+
+  local bundles = {}
+  local debug_jar = vim.fn.glob(
+    mason_path .. "/packages/java-debug-adapter/extension/server/com.microsoft.java.debug.plugin-*.jar",
+    true
+  )
+  if debug_jar[1] then table.insert(bundles, debug_jar[1]) end
+  local test_jar = vim.fn.glob(
+    mason_path .. "/packages/java-test/extension/server/com.microsoft.java.test.plugin-*.jar",
+    true
+  )
+  if test_jar[1] then table.insert(bundles, test_jar[1]) end
+
+  local config = {
+    cmd = {
+      mason_path .. "/bin/jdtls",
+      "-data", workspace_dir,
+    },
+    root_dir = root_dir,
+    init_options = { bundles = bundles },
+    settings = {
+      java = {
+        signatureHelp = { enabled = true },
+        completion = {
+          favoriteStaticMembers = {
+            "org.junit.Assert.*",
+            "org.junit.jupiter.api.Assertions.*",
+          },
+        },
+      },
+    },
+    on_attach = function()
+      require("jdtls.dap").setup_dap({ hotcodereplace = "auto" })
+      require("jdtls.setup").add_commands()
+    end,
+  }
+
+  jdtls.start_or_attach(config)
+end
+
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "java",
-  callback = function(args)
-    local jdtls_path = vim.fn.expand("~/.local/share/nvim/mason/packages/jdtls")
-    local config_dir = jdtls_path .. "/config_linux"
-    local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
-    local workspace_dir = vim.fn.expand("~/java-workspace/" .. project_name)
-    vim.fn.mkdir(workspace_dir, "p")
-
-    local launcher_jars = vim.fn.glob(jdtls_path .. "/plugins/org.eclipse.equinox.launcher_*.jar", false, true)
-    if #launcher_jars == 0 then
-      vim.notify("jdtls: launcher jar не найден", vim.log.levels.ERROR)
-      return
-    end
-    local launcher_jar = launcher_jars[#launcher_jars]
-
-    local root_files = vim.fs.find({ "pom.xml", "build.gradle", "build.gradle.kts", ".git", "src" }, { upward = true })
-    local root_dir = root_files[1] and vim.fs.dirname(root_files[1]) or vim.fn.getcwd()
-
-    vim.lsp.start({
-      name = "jdtls",
-      cmd = {
-        "java",
-        "-Declipse.application=org.eclipse.jdt.ls.core.id1",
-        "-Dosgi.bundles.defaultStartLevel=4",
-        "-Declipse.product=org.eclipse.jdt.ls.core.product",
-        "-Dlog.protocol=true",
-        "-Dlog.level=ALL",
-        "-Xmx1g",
-        "--add-modules=ALL-SYSTEM",
-        "--add-opens", "java.base/java.util=ALL-UNNAMED",
-        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-        "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
-        "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
-        "--add-opens", "java.base/java.io=ALL-UNNAMED",
-        "--add-opens", "java.base/java.net=ALL-UNNAMED",
-        "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-        "--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED",
-        "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
-        "--add-opens", "java.base/jdk.internal.ref=ALL-UNNAMED",
-        "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
-        "--add-opens", "java.management/sun.management=ALL-UNNAMED",
-        "--add-opens", "jdk.management/com.sun.management.internal=ALL-UNNAMED",
-        "-jar", launcher_jar,
-        "-configuration", config_dir,
-        "-data", workspace_dir,
-      },
-      root_dir = root_dir,
-      bufnr = args.buf,
-    })
-  end,
+  callback = java_setup,
 })
