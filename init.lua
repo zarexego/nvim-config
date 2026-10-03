@@ -406,6 +406,10 @@ map("n", "<C-h>", "<C-w>h", { desc = "Window left" })
 map("n", "<C-j>", "<C-w>j", { desc = "Window down" })
 map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
 map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
+-- ====== Java run ======
+map("n", "<leader>jc", "<cmd>!javac %<cr>", { desc = "Java: compile" })
+map("n", "<leader>jr", "<cmd>!java %:r<cr>", { desc = "Java: run" })
+map("n", "<leader>jx", "<cmd>!javac % && java %:r<cr>", { desc = "Java: compile & run" })
 
 -- ====== Java setup ======
 local function java_setup()
